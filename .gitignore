@@ -1,8 +1,0 @@
-Debug/
-.cproject
-.gitignore
-.project
-aeabi_romdiv_patch.s
-liblinks.xml
-src
-inc
