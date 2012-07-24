@@ -8,8 +8,7 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-#define SYS_ERROR(_err)	sysErrRaise ((uint32)_err);
-#define FATAL(_err) 	sysErrRaise ((uint32)_err); while(1);
+
 //(longjmp(syserr_env, _err))
 
 /////////////////////////////////////////////////////////////
@@ -25,6 +24,9 @@
 #define VERIFY_STRUCTURE(s)					\
 	if ((s->object_id ^ s->not_object_id))	\
 		FATAL (ERR_BAD_STRUCTURE);
+
+#define SYS_ERROR(_err)	sysErrRaise ((uint32)_err);
+#define FATAL(_err) 	sysErrRaise ((uint32)_err); while(1);
 
 void	sysErrInit		(void);
 void	sysErrRaise		(uint32 err);
@@ -72,7 +74,9 @@ typedef enum  {
 	ERR_HWTIMER_BAD_RELOAD_VAL	= (0x1B << 16),
 	ERR_HWTIMER_BAD_MODE		= (0x1C << 16),
 	ERR_RESOURCE_CLASH			= (0x1D << 16),
-	ERR_BAD_RESOURCE			= (0x1E << 16)
+	ERR_BAD_RESOURCE			= (0x1E << 16),
+	ERR_TOO_MANY_SWTIMERS		= (0x1F << 16),
+	ERR_SWTIMER_BAD_RELOAD_VAL	= (0x20 << 16)
 
 } syserr_types;
 

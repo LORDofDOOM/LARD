@@ -10,7 +10,6 @@
 
 #define N_SW_TIMERS 32
 
-uint32	timer_flags;
 
 typedef enum {
 	SWTIMER_TYPE_MONOSTABLE,	// Timer is not reloaded on timeout
@@ -26,18 +25,18 @@ struct _swTimer {
 	uint32	type;
 	uint32	count;
 	uint32	reload_value;
+	uint32	max_reload_value;	// Traps values that are too large
 	uint32	enabled;
 	void 	(*callback_func)(struct _swTimer *);
 
 	uint8	not_object_id;
-
 
 } ;
 
 uint32 swTimerAttachCallback 	(swTimer * t, void (*callback_func)(swTimer *));
 void   swTimerExecuteCallbacks 	(void);
 uint32 swTimerScan 				(void);
-swTimer  * swTimerCreate 		(uint32 reload_val, uint32 type, void (*callback_func)(swTimer *));
+swTimer * swTimerCreate 		(uint32 reload_val, uint32 max_reload_val, uint32 type, void (*callback_func)(swTimer *));
 uint32 swTimerSetReLoadVal		(swTimer * t, uint32 reload_val);
 uint32 swTimerReload 			(swTimer * t);
 uint32 swTimerStart				(swTimer * t);

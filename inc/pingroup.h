@@ -9,6 +9,8 @@
 #define PINGROUP_H_
 
 typedef struct {
+	uint8	object_id;
+
 	uint8	pin_lo;			// lowest pin in group
 	uint8	pin_hi;			// highest pin in group
 	uint8	port;			// Port the group is on
@@ -20,6 +22,9 @@ typedef struct {
 	uint32	set_mask;		// Mask used to set all bits in the group
 	uint32	shift_bits;		// Number of bits to shift data
 	uint32	val;			// current value of the group
+
+	uint8	not_object_id;
+
 } pinGroup;
 
 #define CHECK_PARMS		 							\

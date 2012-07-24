@@ -40,7 +40,7 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 
 	if (pin_hi == pin_lo) {
 		SYS_ERROR (ERR_INV_PIN);
-		return ERROR;
+		return (pinGroup *) ERROR;
 	}
 
 	if (pin_hi < pin_lo) {
@@ -51,12 +51,12 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 
 	if (pin_hi >= nPins()) {
 		SYS_ERROR (ERR_INV_PIN);
-		return ERROR;
+		return (pinGroup *) ERROR;
 	}
 
 	if (pinPort (pin_lo) != pinPort (pin_hi)) {
 		SYS_ERROR (ERR_DIFF_PINPORT);
-		return ERROR;
+		return (pinGroup *) ERROR;
 	}
 
 	pinGroup * pg;
@@ -65,8 +65,11 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 
 	if (pg == 0) {
 		SYS_ERROR (ERR_MALLOC_FAILED);
-		return ERROR;
+		return (pinGroup *) ERROR;
 	}
+
+	pg->object_id 	  = OBJID_PINGROUP;
+	pg->not_object_id = ~OBJID_PINGROUP;
 
 	pg->pin_lo = pin_lo;
 	pg->pin_hi = pin_hi;
@@ -113,18 +116,32 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 //
 // Description:			Write a value to a pinGroup.
 //
-// Parameters:			pinGroup * pg, pointer to the pinGroup
-//						uint32 val, the value to write
+// Parameters:			pinGroup * pg, pointer to the pinGroup.
+//						uint32 val, the value to write.
 //
-// Returned value:		NOERROR
+// Returned value:		NOERROR unless a bad structure is found.
 //
-// Errors raised:		none
+// Errors raised:		ERR_BAD_STRUCTURE if the pg parameter points
+//						to a corrupted structure. If this occurs the
+//						FATAL macro is executed.
 //
-// Notes:
+// Notes:				Values for val that are larger than the number
+//						of bits in the pinGroup are truncated. Ie they
+//						and AND'd with a mask to clear any bits not
+//						needed for the group.  This is not considered
+//						to be an error.
 //
-// Example:
+// Example:				pinGroup * pg = pinGroupCreate (OUTPUT, 5, 10);
+//						pinGroupClear (pg);
+//						// port now looks like
+//						// xxxxxxxxxxxxxxxxxxxxx000000xxxxx
+//						pinGroupWrite (pg, 0x35);
+//						// port now looks like
+//						// xxxxxxxxxxxxxxxxxxxxx110101xxxxx
 //
 uint32 pinGroupWrite(pinGroup * pg, uint32 val) {
+
+	VERIFY_STRUCTURE (pg);
 
 	val &= pg->max_val;
 
@@ -143,6 +160,8 @@ uint32 pinGroupRead(pinGroup * pg) {
 
 	uint32 val;
 
+	VERIFY_STRUCTURE (pg);
+
 	val = pg->port_address->PIN;
 	val &= pg->set_mask;
 	val >>= pg->shift_bits;
@@ -153,6 +172,8 @@ uint32 pinGroupRead(pinGroup * pg) {
 
 uint32 pinGroupInc(pinGroup * pg) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val++;
 	pinGroupWrite (pg, val);
@@ -161,6 +182,8 @@ uint32 pinGroupInc(pinGroup * pg) {
 }
 
 uint32 pinGroupDec(pinGroup * pg) {
+
+	VERIFY_STRUCTURE (pg);
 
 	uint32 val = pg->val;
 	val--;
@@ -171,6 +194,8 @@ uint32 pinGroupDec(pinGroup * pg) {
 
 uint32 pinGroupClear(pinGroup * pg) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val &= pg->clear_mask;
 	pinGroupWrite (pg, val);
@@ -179,6 +204,8 @@ uint32 pinGroupClear(pinGroup * pg) {
 }
 
 uint32 pinGroupSet(pinGroup * pg) {
+
+	VERIFY_STRUCTURE (pg);
 
 	uint32 val = pg->val;
 	val &= pg->set_mask;
@@ -189,6 +216,8 @@ uint32 pinGroupSet(pinGroup * pg) {
 
 uint32 pinGroupShiftLeft(pinGroup * pg, uint32 bits) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val <<= bits;
 	pinGroupWrite (pg, val);
@@ -198,6 +227,8 @@ uint32 pinGroupShiftLeft(pinGroup * pg, uint32 bits) {
 
 uint32 pinGroupShiftRight(pinGroup * pg, uint32 bits) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val >>= bits;
 	pinGroupWrite (pg, val);
@@ -206,6 +237,8 @@ uint32 pinGroupShiftRight(pinGroup * pg, uint32 bits) {
 }
 
 uint32 pinGroupRotateLeft(pinGroup * pg) {
+
+	VERIFY_STRUCTURE (pg);
 
 	uint32 val = pg->val;
 
@@ -219,6 +252,8 @@ uint32 pinGroupRotateLeft(pinGroup * pg) {
 
 uint32 pinGroupRotateRight(pinGroup * pg) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	uint8 carry = val & 1;
 	val >>= 1;
@@ -231,6 +266,8 @@ uint32 pinGroupRotateRight(pinGroup * pg) {
 
 uint32 pinGroupInvert	(pinGroup * pg) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val = ~val;
 	pinGroupWrite (pg, val);
@@ -239,6 +276,8 @@ uint32 pinGroupInvert	(pinGroup * pg) {
 }
 
 uint32 pinGroupOR(pinGroup * pg, uint32 or_val) {
+
+	VERIFY_STRUCTURE (pg);
 
 	uint32 val = pg->val;
 	val |= or_val;
@@ -249,6 +288,8 @@ uint32 pinGroupOR(pinGroup * pg, uint32 or_val) {
 
 uint32 pinGroupAND(pinGroup * pg, uint32 and_val) {
 
+	VERIFY_STRUCTURE (pg);
+
 	uint32 val = pg->val;
 	val |= and_val;
 	pinGroupWrite (pg, val);
@@ -257,6 +298,8 @@ uint32 pinGroupAND(pinGroup * pg, uint32 and_val) {
 }
 
 uint32 pinGroupXOR(pinGroup * pg, uint32 xor_val) {
+
+	VERIFY_STRUCTURE (pg);
 
 	uint32 val = pg->val;
 	val ^= xor_val;

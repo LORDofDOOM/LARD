@@ -155,11 +155,11 @@ boolean _pinClearGpioBit(uint32 pin, uint32 gpio_reg) {
 //
 // Parameters:			uint32 pin, the logical pin number: valid values 0-38
 //
-// Returned value:		TRUE if no errors
-//						FALSE if there are errors
+// Returned value:		NOERROR if no errors, ERROR if there are.
 //						Except pinRead which returns the logic state of the pin
 ///
-// Errors raised:		none
+// Errors raised:		ERR_INV_PIN if the pin number was invalid.
+
 //
 //
 uint32 pinHigh(uint32 pin) {
