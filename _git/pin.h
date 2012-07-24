@@ -1,0 +1,292 @@
+//////////////////////////////// pins.h ////////////////////////////
+//
+//
+//
+//
+//
+
+#ifndef PINS_H_
+#define PINS_H_
+
+////////////////////////////////////////////////////////////////
+//
+// Function prototypes.
+//
+uint32	pinConfig				(uint32 pin, uint32 mode);
+uint32	pinFunc					(uint32 pin, uint32 func);
+uint32	pinHigh					(uint32 pin);
+uint32	pinLow					(uint32 pin);
+uint32  pinRead					(uint32 pin);
+uint32	pinWrite				(uint32 pin, uint32 val);
+uint32	pinMask					(uint32 pin);
+uint32	pinToggle				(uint32 pin);
+uint32	pinSetAsDigitalInput	(uint32 pin);
+uint32	pinSetAsDigitalOutput	(uint32 pin);
+uint32	pinSetAsAnalogInput		(uint32 pin);
+uint32	nPins					(void);
+uint32 	pinSetInterruptMode 	(uint32 pin, uint8 mode);
+uint32 	pinEnableInterrupt 		(uint32 pin);
+uint32 	pinDisableInterrupt 	(uint32 pin) ;
+uint32 	pinClearInterrupt 		(uint32 pin);
+
+////////////////////////////////////////////////////////////////
+//
+// Values passed to the pinFunc() function
+//
+typedef enum  {
+	FUNC_INVALID,
+
+	FUNC_GPIO,
+
+	FUNC_ACMP0_O,
+	FUNC_ACMP0_I0,
+	FUNC_ACMP0_I1,
+	FUNC_ACMP0_I2,
+	FUNC_ACMP0_I3,
+
+	FUNC_ACMP1_O,
+	FUNC_ACMP1_I0,
+	FUNC_ACMP1_I1,
+	FUNC_ACMP1_I2,
+	FUNC_ACMP1_I3,
+
+	FUNC_RXD1,
+	FUNC_TXD1,
+	FUNC_TXD0,
+	FUNC_RXD0,
+
+	FUNC_RTS0,
+	FUNC_DTR0,
+	FUNC_DSR0,
+	FUNC_DCD0,
+	FUNC_CTS0,
+
+	FUNC_CT32B0_CAP0,
+	FUNC_CT32B0_MAT0,
+	FUNC_CT32B0_CAP1,
+	FUNC_CT32B0_MAT1,
+	FUNC_CT32B0_CAP2,
+	FUNC_CT32B0_MAT2,
+	FUNC_CT32B0_CAP3,
+	FUNC_CT32B0_MAT3,
+
+	FUNC_CT32B1_CAP0,
+	FUNC_CT32B1_MAT0,
+	FUNC_CT32B1_CAP1,
+	FUNC_CT32B1_MAT1,
+	FUNC_CT32B1_CAP2,
+	FUNC_CT32B1_MAT2,
+	FUNC_CT32B1_CAP3,
+	FUNC_CT32B1_MAT3,
+
+	FUNC_CT16B0_CAP0,
+	FUNC_CT16B0_MAT0,
+	FUNC_CT16B0_CAP1,
+	FUNC_CT16B0_MAT1,
+
+	FUNC_CT16B1_CAP0,
+	FUNC_CT16B1_MAT0,
+	FUNC_CT16B1_CAP1,
+	FUNC_CT16B1_MAT1,
+
+	FUNC_RI0,
+	FUNC_SCL,
+	FUNC_SDA,
+
+	FUNC_CLKOUT,
+
+	FUNC_SCK,
+	FUNC_SSEL,
+	FUNC_MISO,
+	FUNC_MOSI,
+
+	FUNC_ADC,
+
+	FUNC_SWCLK,
+	FUNC_SWDIO,
+
+	FUNC_RESET,
+
+	FUNC_ROSC
+
+} gpio_func_types;
+
+//////////////////////////////////////////////////////////////////
+//
+// This array holds the valid functions for each of the 39 pins.
+//
+// Example:		Pin 0 has two functions, GPIO and RTS0 and these
+// 				require the values 0 and 2 to be placed in the FUNC
+//				field of the pin's IOCONFIG register.
+//
+// 				The placement of the FUNC_GPIO and FUNC_RTS0 values
+//				in this array tells pinFunc()what value to write
+//				into the field. Eg FUNC_RTS0 is at location 2 of
+//				pin 0's array entry, so the value 2 is written into
+//				the lower 3 bits of the IOCONFIG register.
+//
+const char pin_funcs [39][8] = {
+/* 0  */ {FUNC_GPIO,		FUNC_INVALID, 	FUNC_RTS0, 		FUNC_INVALID,		// PIO0_0
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 1  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RXD0, 		FUNC_CT32B0_CAP0,
+		  FUNC_CT32B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 2  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_TXD0, 		FUNC_CT32B0_CAP1,
+		  FUNC_CT32B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 3  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DTR0, 		FUNC_CT32B0_CAP2,
+		  FUNC_CT32B0_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 4  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DSR0, 		FUNC_CT32B0_CAP3,
+		  FUNC_CT32B0_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 5  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DCD0, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 6  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RI0, 		FUNC_CT32B1_CAP0,
+		  FUNC_CT32B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 7  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_CTS0, 		FUNC_CT32B1_CAP1,
+		  FUNC_CT32B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 8  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RXD1, 		FUNC_CT32B1_CAP2,
+		  FUNC_CT32B1_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 9  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_TXD1, 		FUNC_CT32B1_CAP3,
+		  FUNC_CT32B1_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 10 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SCL, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 11 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SDA, 		FUNC_CT16B0_CAP0,
+		  FUNC_CT16B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 12 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_CLKOUT,  	FUNC_CT16B0_CAP1,
+		  FUNC_CT16B0_MAT1, FUNC_INVALID,	FUNC_INVALID, 	FUNC_INVALID},
+/* 13 */ {FUNC_RESET, 		FUNC_GPIO,		FUNC_INVALID, 	FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 14 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SCK, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 15 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SSEL, 		FUNC_CT16B1_CAP0,
+		  FUNC_CT16B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 16 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_MISO, 		FUNC_CT16B1_CAP1,
+		  FUNC_CT16B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 17 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_MOSI, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 18 */ {FUNC_GPIO, 		FUNC_SWCLK, 	FUNC_INVALID, 	FUNC_CT32B0_CAP0,
+		  FUNC_CT32B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 19 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I0, 	FUNC_CT32B0_CAP1,
+		  FUNC_CT32B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 20 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I1, 	FUNC_CT32B0_CAP2,
+		  FUNC_CT32B0_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 21 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I2, 	FUNC_CT32B0_CAP3,
+		  FUNC_CT32B0_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 22 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I3, 	FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 23 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_I0, 	FUNC_CT32B1_CAP0,
+		  FUNC_CT32B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 24 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_I1, 	FUNC_CT32B1_CAP1,
+		  FUNC_CT32B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 25 */ {FUNC_SWDIO, 		FUNC_INVALID, 	FUNC_ACMP1_I2, 	FUNC_CT32B1_CAP2,
+		  FUNC_CT32B1_MAT2, FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID},
+/* 26 */ {FUNC_SWCLK, 		FUNC_INVALID, 	FUNC_ACMP1_I3, 	FUNC_CT32B1_CAP3,
+		  FUNC_CT32B1_MAT3, FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID},
+/* 27 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_O, 	FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 28 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_O, 	FUNC_CT16B0_CAP0,
+		  FUNC_CT16B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 29 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ROSC, 		FUNC_CT16B0_CAP1,
+		  FUNC_CT16B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 30 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ADC,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
+/* 31 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ADC,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO0_31
+/* 32 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_0
+/* 33 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_1
+/* 34 */ {FUNC_GPIO, 		FUNC_SWDIO, 	FUNC_ADC, 		FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_2
+/* 35 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID, 	FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_3
+/* 36 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID, 	FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_4
+/* 37 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_CT16B1_CAP0, FUNC_CT16B1_MAT0,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_5
+/* 38 */ {FUNC_GPIO, 		FUNC_CT16B1_CAP1, FUNC_CT16B1_MAT1, FUNC_INVALID,
+		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID}		// PIO1_6
+
+};
+
+////////////////////////////////////////////////////////////////
+//
+// Offsets within a pin's IOCONFIG register, used by the macros below
+//
+#define	PIN_FUNC		0
+#define	PIN_MODE		4
+#define	PIN_INV			6
+#define	PIN_ADMODE		7
+#define	PIN_DRV			9
+#define	PIN_OD			10
+#define	PIN_S_MODE		11
+#define	PIN_CLK_DIV		13
+
+////////////////////////////////////////////////////////////////
+//
+// Constants used when calling the pinMode() function
+//
+#define	PIN_MODE_NOPULLUP		(0 << PIN_MODE)
+#define	PIN_MODE_PULLUP			(1 << PIN_MODE)
+
+#define	PIN_INV_NO				(0 << PIN_INV)
+#define	PIN_INV_YES				(1 << PIN_INV)
+
+#define	PIN_ADMODE_ENABLED		(0 << PIN_ADMODE)
+#define	PIN_ADMODE_DISABLED		(1 << PIN_ADMODE)
+
+#define	PIN_DRIVE_LOW			(0 << PIN_DRV)
+#define	PIN_DRIVE_HIGH			(1 << PIN_DRV)
+
+#define	PIN_OD_DISABLED			(0 << PIN_OD)
+#define	PIN_OD_ENABLED			(1 << PIN_OD)
+
+#define	PIN_S_MODE_BYPASS		(0 << PIN_S_MODE)
+#define	PIN_S_MODE_1CLK			(1 << PIN_S_MODE)
+#define	PIN_S_MODE_2CLK			(2 << PIN_S_MODE)
+#define	PIN_S_MODE_3CLK			(3 << PIN_S_MODE)
+
+#define	PIN_CLK_DIV0			(0 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV1			(1 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV2			(2 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV3			(3 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV4			(4 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV5			(5 << PIN_CLK_DIV)
+#define	PIN_CLK_DIV6			(6 << PIN_CLK_DIV)
+
+////////////////////////////////////////////////////////////////
+//
+// Values used when calling _pinSetGpioBit() or _pinClearGpioBit()
+// Used to index into the gpio_regs array.
+//
+typedef enum  {
+	GPIOREG_MASK,
+	GPIOREG_PIN,
+	GPIOREG_OUT,
+	GPIOREG_SET,
+	GPIOREG_CLR,
+	GPIOREG_NOT,
+	GPIOREG_DIR,
+	GPIOREG_IS,
+	GPIOREG_IBE,
+	GPIOREG_IEV,
+	GPIOREG_IE,
+	GPIOREG_RIS,
+	GPIOREG_MIS,
+	GPIOREG_IC,
+} gpio_regs_offsets;
+
+////////////////////////////////////////////////////////////////
+//
+// Values used when setting the interrupt mode of a pin
+//
+enum {
+	PININT_HIGH_LEVEL,
+	PININT_LOW_LEVEL,
+	PININT_RISING_EDGE,
+	PININT_FALLING_EDGE,
+	PININT_BOTH_EDGES
+};
+
+#define 	pinPort(pin)	(pin / 32)
+#define		pinPos(pin)		(pin % 32)
+
+#endif /* PINS_H_ */
