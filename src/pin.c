@@ -9,7 +9,7 @@
 // Logical pins the allocated in pin and port order, ie pin0 is
 // PO:O, pin20 is P0:20, pin30 is P1:9. There is no provision
 // for quasi-random pin allocations as per the Arduino.
-
+//
 // TODO: setWriteProtect
 
 #include "LARD.h"
