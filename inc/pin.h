@@ -14,8 +14,8 @@
 //
 uint32	pinConfig				(uint32 pin, uint32 mode);
 uint32	pinFunc					(uint32 pin, uint32 func);
-uint32	pinHigh					(uint32 pin);
 uint32	pinLow					(uint32 pin);
+uint32	pinHigh					(uint32 pin);
 uint32  pinRead					(uint32 pin);
 uint32	pinWrite				(uint32 pin, uint32 val);
 uint32	pinMask					(uint32 pin);
@@ -23,11 +23,12 @@ uint32	pinToggle				(uint32 pin);
 uint32	pinSetAsDigitalInput	(uint32 pin);
 uint32	pinSetAsDigitalOutput	(uint32 pin);
 uint32	pinSetAsAnalogInput		(uint32 pin);
-uint32	nPins					(void);
+uint32	nativeDpins				(void);
 uint32 	pinSetInterruptMode 	(uint32 pin, uint8 mode);
 uint32 	pinEnableInterrupt 		(uint32 pin);
 uint32 	pinDisableInterrupt 	(uint32 pin) ;
 uint32 	pinClearInterrupt 		(uint32 pin);
+uint32 	pinGetPhyiscalPin 		(uint32 pin);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -111,102 +112,6 @@ typedef enum  {
 
 } gpio_func_types;
 
-//////////////////////////////////////////////////////////////////
-//
-// This array holds the valid functions for each of the 39 pins.
-//
-// Example:		Pin 0 has two functions, GPIO and RTS0 and these
-// 				require the values 0 and 2 to be placed in the FUNC
-//				field of the pin's IOCONFIG register.
-//
-// 				The placement of the FUNC_GPIO and FUNC_RTS0 values
-//				in this array tells pinFunc()what value to write
-//				into the field. Eg FUNC_RTS0 is at location 2 of
-//				pin 0's array entry, so the value 2 is written into
-//				the lower 3 bits of the IOCONFIG register.
-//
-const char pin_funcs [39][8] = {
-/* 0  */ {FUNC_GPIO,		FUNC_INVALID, 	FUNC_RTS0, 		FUNC_INVALID,		// PIO0_0
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 1  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RXD0, 		FUNC_CT32B0_CAP0,
-		  FUNC_CT32B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 2  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_TXD0, 		FUNC_CT32B0_CAP1,
-		  FUNC_CT32B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 3  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DTR0, 		FUNC_CT32B0_CAP2,
-		  FUNC_CT32B0_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 4  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DSR0, 		FUNC_CT32B0_CAP3,
-		  FUNC_CT32B0_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 5  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_DCD0, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 6  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RI0, 		FUNC_CT32B1_CAP0,
-		  FUNC_CT32B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 7  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_CTS0, 		FUNC_CT32B1_CAP1,
-		  FUNC_CT32B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 8  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_RXD1, 		FUNC_CT32B1_CAP2,
-		  FUNC_CT32B1_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 9  */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_TXD1, 		FUNC_CT32B1_CAP3,
-		  FUNC_CT32B1_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 10 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SCL, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 11 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SDA, 		FUNC_CT16B0_CAP0,
-		  FUNC_CT16B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 12 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_CLKOUT,  	FUNC_CT16B0_CAP1,
-		  FUNC_CT16B0_MAT1, FUNC_INVALID,	FUNC_INVALID, 	FUNC_INVALID},
-/* 13 */ {FUNC_RESET, 		FUNC_GPIO,		FUNC_INVALID, 	FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 14 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SCK, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 15 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_SSEL, 		FUNC_CT16B1_CAP0,
-		  FUNC_CT16B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 16 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_MISO, 		FUNC_CT16B1_CAP1,
-		  FUNC_CT16B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 17 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_MOSI, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 18 */ {FUNC_GPIO, 		FUNC_SWCLK, 	FUNC_INVALID, 	FUNC_CT32B0_CAP0,
-		  FUNC_CT32B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 19 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I0, 	FUNC_CT32B0_CAP1,
-		  FUNC_CT32B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 20 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I1, 	FUNC_CT32B0_CAP2,
-		  FUNC_CT32B0_MAT2, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 21 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I2, 	FUNC_CT32B0_CAP3,
-		  FUNC_CT32B0_MAT3, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 22 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_I3, 	FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 23 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_I0, 	FUNC_CT32B1_CAP0,
-		  FUNC_CT32B1_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 24 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_I1, 	FUNC_CT32B1_CAP1,
-		  FUNC_CT32B1_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 25 */ {FUNC_SWDIO, 		FUNC_INVALID, 	FUNC_ACMP1_I2, 	FUNC_CT32B1_CAP2,
-		  FUNC_CT32B1_MAT2, FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID},
-/* 26 */ {FUNC_SWCLK, 		FUNC_INVALID, 	FUNC_ACMP1_I3, 	FUNC_CT32B1_CAP3,
-		  FUNC_CT32B1_MAT3, FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID},
-/* 27 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP0_O, 	FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 28 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ACMP1_O, 	FUNC_CT16B0_CAP0,
-		  FUNC_CT16B0_MAT0, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 29 */ {FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ROSC, 		FUNC_CT16B0_CAP1,
-		  FUNC_CT16B0_MAT1, FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 30 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ADC,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},
-/* 31 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_INVALID, 	FUNC_ADC,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO0_31
-/* 32 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_0
-/* 33 */ {FUNC_INVALID, 	FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_1
-/* 34 */ {FUNC_GPIO, 		FUNC_SWDIO, 	FUNC_ADC, 		FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_2
-/* 35 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID, 	FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_3
-/* 36 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_INVALID, 	FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_4
-/* 37 */ {FUNC_GPIO, 		FUNC_ADC, 		FUNC_CT16B1_CAP0, FUNC_CT16B1_MAT0,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID},		// PIO1_5
-/* 38 */ {FUNC_GPIO, 		FUNC_CT16B1_CAP1, FUNC_CT16B1_MAT1, FUNC_INVALID,
-		  FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID, 	FUNC_INVALID}		// PIO1_6
-
-};
-
 ////////////////////////////////////////////////////////////////
 //
 // Offsets within a pin's IOCONFIG register, used by the macros below
@@ -234,7 +139,7 @@ const char pin_funcs [39][8] = {
 #define	PIN_ADMODE_DISABLED		(1 << PIN_ADMODE)
 
 #define	PIN_DRIVE_LOW			(0 << PIN_DRV)
-#define	PIN_DRIVE_HIGH			(1 << PIN_DRV)
+#define	PIN_DRIVE_low			(1 << PIN_DRV)
 
 #define	PIN_OD_DISABLED			(0 << PIN_OD)
 #define	PIN_OD_ENABLED			(1 << PIN_OD)
@@ -286,7 +191,198 @@ enum {
 	PININT_BOTH_EDGES
 };
 
-#define 	pinPort(pin)	(pin / 32)
-#define		pinPos(pin)		(pin % 32)
+
+////////////////////////////////////////////////////////////////
+//
+// Macros for fast pin manipulation
+//
+// Note that the form
+//
+// LPC_GPIO0->CLR = (1 << 7)
+//
+// is used, it should be faster to use
+//
+// (*(uint32*)0x50000014 = (1 << 7))
+//
+// and in fact this form compiles to fewer instructions, however
+// testing shows that the two forms execute in the same time
+// so the more portable and readable version is used.
+//
+
+#define pin0toggle()	(LPC_GPIO0->NOT = (1 << 0))
+#define pin1toggle()	(LPC_GPIO0->NOT = (1 << 1))
+#define pin2toggle()	(LPC_GPIO0->NOT = (1 << 2))
+#define pin3toggle()	(LPC_GPIO0->NOT = (1 << 3))
+#define pin4toggle()	(LPC_GPIO0->NOT = (1 << 4))
+#define pin5toggle()	(LPC_GPIO0->NOT = (1 << 5))
+#define pin6toggle()	(LPC_GPIO0->NOT = (1 << 6))
+#define pin7toggle()	(LPC_GPIO0->NOT = (1 << 7))
+#define pin8toggle()	(LPC_GPIO0->NOT = (1 << 8))
+#define pin9toggle()	(LPC_GPIO0->NOT = (1 << 9))
+#define pin10toggle()	(LPC_GPIO0->NOT = (1 << 10))
+#define pin11toggle()	(LPC_GPIO0->NOT = (1 << 11))
+#define pin12toggle()	(LPC_GPIO0->NOT = (1 << 12))
+#define pin13toggle()	(LPC_GPIO0->NOT = (1 << 13))
+#define pin14toggle()	(LPC_GPIO0->NOT = (1 << 14))
+#define pin15toggle()	(LPC_GPIO0->NOT = (1 << 15))
+#define pin16toggle()	(LPC_GPIO0->NOT = (1 << 16))
+#define pin17toggle()	(LPC_GPIO0->NOT = (1 << 17))
+#define pin18toggle()	(LPC_GPIO0->NOT = (1 << 18))
+#define pin19toggle()	(LPC_GPIO0->NOT = (1 << 19))
+#define pin20toggle()	(LPC_GPIO0->NOT = (1 << 20))
+#define pin21toggle()	(LPC_GPIO0->NOT = (1 << 21))
+#define pin22toggle()	(LPC_GPIO0->NOT = (1 << 22))
+#define pin23toggle()	(LPC_GPIO0->NOT = (1 << 23))
+#define pin24toggle()	(LPC_GPIO0->NOT = (1 << 24))
+#define pin25toggle()	(LPC_GPIO0->NOT = (1 << 25))
+#define pin26toggle()	(LPC_GPIO0->NOT = (1 << 26))
+#define pin27toggle()	(LPC_GPIO0->NOT = (1 << 27))
+#define pin28toggle()	(LPC_GPIO0->NOT = (1 << 28))
+#define pin29toggle()	(LPC_GPIO0->NOT = (1 << 29))
+#define pin30toggle()	(LPC_GPIO0->NOT = (1 << 30))
+#define pin31toggle()	(LPC_GPIO0->NOT = (1 << 31))
+#define pin32toggle()	(LPC_GPIO1->NOT = (1 << 0))
+#define pin33toggle()	(LPC_GPIO1->NOT = (1 << 1))
+#define pin34toggle()	(LPC_GPIO1->NOT = (1 << 2))
+#define pin35toggle()	(LPC_GPIO1->NOT = (1 << 3))
+#define pin36toggle()	(LPC_GPIO1->NOT = (1 << 4))
+#define pin37toggle()	(LPC_GPIO1->NOT = (1 << 5))
+#define pin38toggle()	(LPC_GPIO1->NOT = (1 << 6))
+#ifdef LPC1227_64PIN
+#define pin39toggle()	(LPC_GPIO2->NOT = (1 << 0))
+#define pin40toggle()	(LPC_GPIO2->NOT = (1 << 1))
+#define pin41toggle()	(LPC_GPIO2->NOT = (1 << 2))
+#define pin42toggle()	(LPC_GPIO2->NOT = (1 << 3))
+#define pin43toggle()	(LPC_GPIO2->NOT = (1 << 4))
+#define pin44toggle()	(LPC_GPIO2->NOT = (1 << 5))
+#define pin45toggle()	(LPC_GPIO2->NOT = (1 << 6))
+#define pin46toggle()	(LPC_GPIO2->NOT = (1 << 7))
+#define pin47toggle()	(LPC_GPIO2->NOT = (1 << 8))
+#define pin48toggle()	(LPC_GPIO2->NOT = (1 << 9))
+#define pin49toggle()	(LPC_GPIO2->NOT = (1 << 10))
+#define pin50toggle()	(LPC_GPIO2->NOT = (1 << 11))
+#define pin51toggle()	(LPC_GPIO2->NOT = (1 << 12))
+#define pin52toggle()	(LPC_GPIO2->NOT = (1 << 13))
+#define pin53toggle()	(LPC_GPIO2->NOT = (1 << 14))
+#define pin54toggle()	(LPC_GPIO2->NOT = (1 << 15))
+#endif
+
+#define pin0low()		(LPC_GPIO0->CLR = (1 << 0))
+#define pin1low()		(LPC_GPIO0->CLR = (1 << 1))
+#define pin2low()		(LPC_GPIO0->CLR = (1 << 2))
+#define pin3low()		(LPC_GPIO0->CLR = (1 << 3))
+#define pin4low()		(LPC_GPIO0->CLR = (1 << 4))
+#define pin5low()		(LPC_GPIO0->CLR = (1 << 5))
+#define pin6low()		(LPC_GPIO0->CLR = (1 << 6))
+#define pin7low()		(LPC_GPIO0->CLR = (1 << 7))
+#define pin8low()		(LPC_GPIO0->CLR = (1 << 8))
+#define pin9low()		(LPC_GPIO0->CLR = (1 << 9))
+#define pin10low()		(LPC_GPIO0->CLR = (1 << 10))
+#define pin11low()		(LPC_GPIO0->CLR = (1 << 11))
+#define pin12low()		(LPC_GPIO0->CLR = (1 << 12))
+#define pin13low()		(LPC_GPIO0->CLR = (1 << 13))
+#define pin14low()		(LPC_GPIO0->CLR = (1 << 14))
+#define pin15low()		(LPC_GPIO0->CLR = (1 << 15))
+#define pin16low()		(LPC_GPIO0->CLR = (1 << 16))
+#define pin17low()		(LPC_GPIO0->CLR = (1 << 17))
+#define pin18low()		(LPC_GPIO0->CLR = (1 << 18))
+#define pin19low()		(LPC_GPIO0->CLR = (1 << 19))
+#define pin20low()		(LPC_GPIO0->CLR = (1 << 20))
+#define pin21low()		(LPC_GPIO0->CLR = (1 << 21))
+#define pin22low()		(LPC_GPIO0->CLR = (1 << 22))
+#define pin23low()		(LPC_GPIO0->CLR = (1 << 23))
+#define pin24low()		(LPC_GPIO0->CLR = (1 << 24))
+#define pin25low()		(LPC_GPIO0->CLR = (1 << 25))
+#define pin26low()		(LPC_GPIO0->CLR = (1 << 26))
+#define pin27low()		(LPC_GPIO0->CLR = (1 << 27))
+#define pin28low()		(LPC_GPIO0->CLR = (1 << 28))
+#define pin29low()		(LPC_GPIO0->CLR = (1 << 29))
+#define pin30low()		(LPC_GPIO0->CLR = (1 << 30))
+#define pin31low()		(LPC_GPIO0->CLR = (1 << 31))
+#define pin32low()		(LPC_GPIO1->CLR = (1 << 0))
+#define pin33low()		(LPC_GPIO1->CLR = (1 << 1))
+#define pin34low()		(LPC_GPIO1->CLR = (1 << 2))
+#define pin35low()		(LPC_GPIO1->CLR = (1 << 3))
+#define pin36low()		(LPC_GPIO1->CLR = (1 << 4))
+#define pin37low()		(LPC_GPIO1->CLR = (1 << 5))
+#define pin38low()		(LPC_GPIO1->CLR = (1 << 6))
+#ifdef LPC1227_64PIN
+#define pin39low()		(LPC_GPIO2->CLR = (1 << 0))
+#define pin40low()		(LPC_GPIO2->CLR = (1 << 1))
+#define pin41low()		(LPC_GPIO2->CLR = (1 << 2))
+#define pin42low()		(LPC_GPIO2->CLR = (1 << 3))
+#define pin43low()		(LPC_GPIO2->CLR = (1 << 4))
+#define pin44low()		(LPC_GPIO2->CLR = (1 << 5))
+#define pin45low()		(LPC_GPIO2->CLR = (1 << 6))
+#define pin46low()		(LPC_GPIO2->CLR = (1 << 7))
+#define pin47low()		(LPC_GPIO2->CLR = (1 << 8))
+#define pin48low()		(LPC_GPIO2->CLR = (1 << 9))
+#define pin49low()		(LPC_GPIO2->CLR = (1 << 10))
+#define pin50low()		(LPC_GPIO2->CLR = (1 << 11))
+#define pin51low()		(LPC_GPIO2->CLR = (1 << 12))
+#define pin52low()		(LPC_GPIO2->CLR = (1 << 13))
+#define pin53low()		(LPC_GPIO2->CLR = (1 << 14))
+#define pin54low()		(LPC_GPIO2->CLR = (1 << 15))
+#endif
+
+#define pin0high()		(LPC_GPIO0->SET = (1 << 0))
+#define pin1high()		(LPC_GPIO0->SET = (1 << 1))
+#define pin2high()		(LPC_GPIO0->SET = (1 << 2))
+#define pin3high()		(LPC_GPIO0->SET = (1 << 3))
+#define pin4high()		(LPC_GPIO0->SET = (1 << 4))
+#define pin5high()		(LPC_GPIO0->SET = (1 << 5))
+#define pin6high()		(LPC_GPIO0->SET = (1 << 6))
+#define pin7high()		(LPC_GPIO0->SET = (1 << 7))
+#define pin8high()		(LPC_GPIO0->SET = (1 << 8))
+#define pin9high()		(LPC_GPIO0->SET = (1 << 9))
+#define pin10high()		(LPC_GPIO0->SET = (1 << 10))
+#define pin11high()		(LPC_GPIO0->SET = (1 << 11))
+#define pin12high()		(LPC_GPIO0->SET = (1 << 12))
+#define pin13high()		(LPC_GPIO0->SET = (1 << 13))
+#define pin14high()		(LPC_GPIO0->SET = (1 << 14))
+#define pin15high()		(LPC_GPIO0->SET = (1 << 15))
+#define pin16high()		(LPC_GPIO0->SET = (1 << 16))
+#define pin17high()		(LPC_GPIO0->SET = (1 << 17))
+#define pin18high()		(LPC_GPIO0->SET = (1 << 18))
+#define pin19high()		(LPC_GPIO0->SET = (1 << 19))
+#define pin20high()		(LPC_GPIO0->SET = (1 << 20))
+#define pin21high()		(LPC_GPIO0->SET = (1 << 21))
+#define pin22high()		(LPC_GPIO0->SET = (1 << 22))
+#define pin23high()		(LPC_GPIO0->SET = (1 << 23))
+#define pin24high()		(LPC_GPIO0->SET = (1 << 24))
+#define pin25high()		(LPC_GPIO0->SET = (1 << 25))
+#define pin26high()		(LPC_GPIO0->SET = (1 << 26))
+#define pin27high()		(LPC_GPIO0->SET = (1 << 27))
+#define pin28high()		(LPC_GPIO0->SET = (1 << 28))
+#define pin29high()		(LPC_GPIO0->SET = (1 << 29))
+#define pin30high()		(LPC_GPIO0->SET = (1 << 30))
+#define pin31high()		(LPC_GPIO0->SET = (1 << 31))
+#define pin32high()		(LPC_GPIO1->SET = (1 << 0))
+#define pin33high()		(LPC_GPIO1->SET = (1 << 1))
+#define pin34high()		(LPC_GPIO1->SET = (1 << 2))
+#define pin35high()		(LPC_GPIO1->SET = (1 << 3))
+#define pin36high()		(LPC_GPIO1->SET = (1 << 4))
+#define pin37high()		(LPC_GPIO1->SET = (1 << 5))
+#define pin38high()		(LPC_GPIO1->SET = (1 << 6))
+#ifdef LPC1227_64PIN
+#define pin39high()		(LPC_GPIO2->SET = (1 << 0))
+#define pin40high()		(LPC_GPIO2->SET = (1 << 1))
+#define pin41high()		(LPC_GPIO2->SET = (1 << 2))
+#define pin42high()		(LPC_GPIO2->SET = (1 << 3))
+#define pin43high()		(LPC_GPIO2->SET = (1 << 4))
+#define pin44high()		(LPC_GPIO2->SET = (1 << 5))
+#define pin45high()		(LPC_GPIO2->SET = (1 << 6))
+#define pin46high()		(LPC_GPIO2->SET = (1 << 7))
+#define pin47high()		(LPC_GPIO2->SET = (1 << 8))
+#define pin48high()		(LPC_GPIO2->SET = (1 << 9))
+#define pin49high()		(LPC_GPIO2->SET = (1 << 10))
+#define pin50high()		(LPC_GPIO2->SET = (1 << 11))
+#define pin51high()		(LPC_GPIO2->SET = (1 << 12))
+#define pin52high()		(LPC_GPIO2->SET = (1 << 13))
+#define pin53high()		(LPC_GPIO2->SET = (1 << 14))
+#define pin54high()		(LPC_GPIO2->SET = (1 << 15))
+#endif
+
+
 
 #endif /* PINS_H_ */

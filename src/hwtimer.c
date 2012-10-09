@@ -28,6 +28,7 @@ hwTimer * hwTimerCreate (uint8 tmr, uint32 reload_val, uint8 mode,
 
 	t->object_id		= OBJID_HWTIMER;
 	t->not_object_id	= ~OBJID_HWTIMER;
+
 	t->timer 			= timers[tmr];
 	t->mode 			= mode;
 	t->callback_func	= callback_func;
@@ -113,15 +114,17 @@ hwTimer * hwTimerCreate (uint8 tmr, uint32 reload_val, uint8 mode,
 
 uint32 hwTimerAttachCallback (hwTimer * t, void (*callback_func)(struct _hwTimer *)) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_HWTIMER)
 
 	t->callback_func = callback_func;
+
+	return NOERROR;
 
 }
 
 uint32	hwTimerSetReLoadVal (hwTimer * t, uint32 reload_val) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_HWTIMER)
 
 	if (reload_val > t->max_val) {
 		SYS_ERROR (ERR_HWTIMER_BAD_RELOAD_VAL);
@@ -130,29 +133,37 @@ uint32	hwTimerSetReLoadVal (hwTimer * t, uint32 reload_val) {
 
 	t->timer->MR0	= t->reload_val;
 
+	return NOERROR;
+
 }
 
 uint32	hwTimerStart (hwTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_HWTIMER)
 
 	t->timer->MR0	= t->reload_val;
 	t->timer->TCR 	= 1;
+
+	return NOERROR;
 
 }
 
 uint32	hwTimerRestart (hwTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_HWTIMER)
 
 	t->timer->TCR 	= 1;
+
+	return NOERROR;
 
 }
 
 uint32	hwTimerStop (hwTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_HWTIMER)
 
 	t->timer->TCR 	= 0;
+
+	return NOERROR;
 
 }

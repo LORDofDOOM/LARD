@@ -11,6 +11,8 @@ boolean 	__system_initialising = FALSE;
 uint32		__msTicks = 0;
 uint32		__last_syserr = NOERROR;
 uint8 	 	__debounceInterval = 0;
+uint32 		__sys_result = 0;
+
 
 /////////////////////////////////////////////////////////////////////
 //

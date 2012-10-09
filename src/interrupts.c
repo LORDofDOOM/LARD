@@ -7,13 +7,13 @@
 
 #include "LARD.h"
 
-uint32	intStatus = 0;
+uint8	__interruptLevel = 0;
 
-boolean		__force_interrupt_scan = 1; 	// 0 or 1, this value added to the pins counter
-											// if 1 then the counter is incremented after
-											// every interrupt thus causing the next scan to
-											// start from the next pin. If 0 the next scan
-											// starts from the same pin
+boolean	__force_interrupt_scan = 1; 	// 0 or 1, this value added to the pins counter
+										// if 1 then the counter is incremented after
+										// every interrupt thus causing the next scan to
+										// start from the next pin. If 0 the next scan
+										// starts from the same pin
 
 void forceFullInterruptScan (boolean x) {
 
@@ -79,7 +79,7 @@ void RTC_IRQHandler() {}            // RTC
 
 /////////////////////////////////////////////////////////////////////
 //
-// Function name:		PIOINT0_IRQHandler
+// Function name:		PIOINTx_IRQHandler
 //
 // Description:			Replacement for the default PORT0 interrupt handler.
 //

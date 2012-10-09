@@ -11,8 +11,8 @@
 extern voidFuncPtr 		eventFunctions[];
 
 void SysTick_Handler		(void);
-void attachEventHandler 	(uint32 interrupt, void (*userFunc)(void));
-void detachEventHandler		(uint32 interrupt);
+uint32 attachEventHandler 	(uint32 interrupt, void (*userFunc)(void));
+uint32 detachEventHandler	(uint32 interrupt);
 
 typedef enum {
 	EVENT_SYS_TICK,

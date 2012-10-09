@@ -39,6 +39,10 @@ uint32 swTimerScan (void) {
 	swTimer	* t;
 	boolean	flag = FALSE;
 
+	if (__n_swTimers > N_SW_TIMERS) {
+		FATAL (ERR_CORRUPT_VARIABLE | VAR_N_SWTIMERS)
+	}
+
 	if (__n_swTimers) {
 		__timer_flags = 0;
 
@@ -92,9 +96,9 @@ void swTimerExecuteCallbacks (void) {
 	if (flags == 0)
 		return;
 
-	for (int i = 0; swTimers[i] != NULL; i++) {
+	for (int i = 0; swTimers[i] != NULL && i < 32; i++) {
 		t = swTimers[i];
-		if ((flags & 1) && ((t->callback_func) != 0) ) {
+		if ((flags & 1) && ((t->callback_func) != NULL) ) {
 			(t->callback_func)(t);
 		}
 		flags >>= 1;
@@ -115,7 +119,7 @@ void swTimerExecuteCallbacks (void) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 // Example:				myFunc () {
@@ -129,7 +133,7 @@ void swTimerExecuteCallbacks (void) {
 //
 uint32 swTimerAttachCallback (swTimer * t, void (*callback_func)(swTimer *)) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
 	t->callback_func = callback_func;
 
@@ -147,7 +151,7 @@ uint32 swTimerAttachCallback (swTimer * t, void (*callback_func)(swTimer *)) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 //						ERR_SWTIMER_BAD_RELOAD_VAL if the new reload
@@ -168,7 +172,7 @@ uint32 swTimerAttachCallback (swTimer * t, void (*callback_func)(swTimer *)) {
 //
 uint32 swTimerSetReLoadVal (swTimer * t, uint32 reload_val) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
 	if ((reload_val == 0) || (reload_val > t->max_reload_value)) {
 		SYS_ERROR (ERR_SWTIMER_BAD_RELOAD_VAL);
@@ -189,7 +193,7 @@ uint32 swTimerSetReLoadVal (swTimer * t, uint32 reload_val) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 // Example:
@@ -205,11 +209,9 @@ uint32 swTimerSetReLoadVal (swTimer * t, uint32 reload_val) {
 //
 uint32 swTimerReload (swTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
-	ATOMIC_START
-		t->count = t->reload_value;
-	ATOMIC_END
+	ATOMIC (t->count = t->reload_value)
 
 	return NOERROR;
 }
@@ -226,7 +228,7 @@ uint32 swTimerReload (swTimer * t) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 // Example:
@@ -236,12 +238,12 @@ uint32 swTimerReload (swTimer * t) {
 //
 uint32 swTimerStart (swTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
-	ATOMIC_START
+	ATOMIC (
 		t->count = t->reload_value;
 		t->enabled = true;
-	ATOMIC_END
+	)
 
 	return NOERROR;
 }
@@ -257,7 +259,7 @@ uint32 swTimerStart (swTimer * t) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 // Example:
@@ -269,11 +271,9 @@ uint32 swTimerStart (swTimer * t) {
 //
 uint32 swTimerRestart (swTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
-	ATOMIC_START
-		t->enabled = true;
-	ATOMIC_END
+	ATOMIC (t->enabled = true)
 
 	return NOERROR;
 }
@@ -289,7 +289,7 @@ uint32 swTimerRestart (swTimer * t) {
 //
 // Returned value:		Hardcoded to NOERROR at present
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the t parameter pointed
+// Errors raised:		ERR_BAD_OBJECT if the t parameter pointed
 //						to a corrupt structure.
 //
 // Example:
@@ -303,11 +303,9 @@ uint32 swTimerRestart (swTimer * t) {
 //
 uint32 swTimerStop (swTimer * t) {
 
-	VERIFY_STRUCTURE(t);
+	VERIFY_OBJECT(t, OBJID_SWTIMER)
 
-	ATOMIC_START
-		t->enabled = false;
-	ATOMIC_END
+	ATOMIC (t->enabled = false)
 
 	return NOERROR;
 }
@@ -357,7 +355,7 @@ swTimer * swTimerCreate (uint32 reload_val, uint32 max_reload_val, uint32 type,
 
 	swTimer * t;
 
-	if (__n_swTimers >= 32) {
+	if (__n_swTimers >= N_SW_TIMERS) {
 		SYS_ERROR (ERR_TOO_MANY_SWTIMERS);
 		return (swTimer *)ERROR;
 	}
@@ -369,8 +367,8 @@ swTimer * swTimerCreate (uint32 reload_val, uint32 max_reload_val, uint32 type,
 		return (swTimer *)ERROR;
 	}
 
-	t->object_id 	 = OBJID_SWTIMER;
-	t->not_object_id = ~OBJID_SWTIMER;
+	t->object_id 		= OBJID_SWTIMER;
+	t->not_object_id 	= ~OBJID_SWTIMER;
 
 	t->reload_value  	= reload_val;
 	t->max_reload_value = max_reload_val;

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////////
 //
 typedef struct {
+
 	uint8	object_id;
 
 	uint8	port;
@@ -30,6 +31,7 @@ typedef struct {
 
 serialConnection * serialCreate (uint8 port, uint32 baudrate, uint8 data_bits, uint8 parity, uint8 stop_bits,
 		uint8 rx_buff_size, uint8 tx_buff_size);
+uint32 serialSetUartPins(serialConnection * s, uint32 location);
 
 enum {
 	SERIAL_UART0,	// Allow for up to 6 hardware UARTs
@@ -63,5 +65,12 @@ enum {
 };
 
 #define MAX_SERIAL_CONNECTIONS	SERIAL_SOFT1
+
+#define	UART0_PINS_R1_T2	0
+#define	UART0_PINS_R40_T41	1
+#define	UART1_PINS_R8_T9	0
+#define	UART1_PINS_R50_T49	1
+#define	UART1_PINS_R51_T52	2
+
 
 #endif /* SERIAL_H_ */

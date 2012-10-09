@@ -55,9 +55,19 @@ enum {
 
 	N_RESOURCES	// used to get array size
 
-};
+} resource_types;
+
+typedef enum {
+	RESOURCE_UNUSED,
+	RESOURCE_USED,
+	RESOURCE_CLASH,
+	RESOURCE_MASKED
+} resource_states;
 
 uint32 resourceRecordUsage 			(uint32 r);
-uint32 resourceCheckForClashes 	(void);
+uint32 resourceCheckForClashes 		(void);
+uint32 resourceMask 				(uint32 r);
+uint32 resourceUnmask 				(uint32 r);
+
 
 #endif /* RESOURCES_H_ */

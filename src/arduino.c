@@ -91,7 +91,7 @@ uint32 micros (void){
 	return SysTick->VAL;	// not right, needs to be looked into
 }
 
-void delayMillseconds(uint32 delay) {
+void delayMilliseconds(uint32 delay) {
 	uint32 stop = msTicks + delay;
 
 	while (msTicks <= stop);

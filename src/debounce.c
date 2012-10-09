@@ -20,7 +20,7 @@ uint32 * debouncePinArrays[3];		// allow for up to 3 ports
 // the debouncePinArrays are 10 deep and filled with samples taken
 // every mS for the last 10mS.
 //
-// In this example pin19 has returned a 1 for 7 of the last reads.
+// In this example pin19 has returned a 1 for 6 of the last reads.
 //
 //                                     1    1    2    2    3
 //                           0....5....0....5....0....5....0..

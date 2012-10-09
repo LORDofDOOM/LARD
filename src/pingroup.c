@@ -7,6 +7,9 @@
 
 #include "LARD.h"
 
+#define 	pinPort(pin)	(pin / 32) // NOTE: These macros duplicated in pin.c
+#define		pinPos(pin)		(pin % 32)
+
 /////////////////////////////////////////////////////////////////////
 //
 // Function name:		pinGroupCreate
@@ -49,7 +52,7 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 		pin_hi = x;
 	}
 
-	if (pin_hi >= nPins()) {
+	if (pin_hi >= nativeDpins()) {
 		SYS_ERROR (ERR_INV_PIN);
 		return (pinGroup *) ERROR;
 	}
@@ -121,7 +124,7 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 //
 // Returned value:		NOERROR unless a bad structure is found.
 //
-// Errors raised:		ERR_BAD_STRUCTURE if the pg parameter points
+// Errors raised:		ERR_BAD_OBJECT if the pg parameter points
 //						to a corrupted structure. If this occurs the
 //						FATAL macro is executed.
 //
@@ -141,17 +144,17 @@ pinGroup * pinGroupCreate(uint32 in_out, uint32 pin_lo, uint32 pin_hi) {
 //
 uint32 pinGroupWrite(pinGroup * pg, uint32 val) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	val &= pg->max_val;
 
-	ATOMIC_START
+	ATOMIC (
 		pg->val = val & pg->max_val;
 		uint32 mask = pg->port_address->MASK;
 		pg->port_address->MASK = pg->clear_mask;
 		pg->port_address->OUT = val << pg->shift_bits;
 		pg->port_address->MASK = mask;
-	ATOMIC_END
+	)
 
 	return NOERROR;
 }
@@ -160,7 +163,7 @@ uint32 pinGroupRead(pinGroup * pg) {
 
 	uint32 val;
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	val = pg->port_address->PIN;
 	val &= pg->set_mask;
@@ -172,7 +175,7 @@ uint32 pinGroupRead(pinGroup * pg) {
 
 uint32 pinGroupInc(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val++;
@@ -183,7 +186,7 @@ uint32 pinGroupInc(pinGroup * pg) {
 
 uint32 pinGroupDec(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val--;
@@ -194,7 +197,7 @@ uint32 pinGroupDec(pinGroup * pg) {
 
 uint32 pinGroupClear(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val &= pg->clear_mask;
@@ -205,7 +208,7 @@ uint32 pinGroupClear(pinGroup * pg) {
 
 uint32 pinGroupSet(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val &= pg->set_mask;
@@ -216,7 +219,7 @@ uint32 pinGroupSet(pinGroup * pg) {
 
 uint32 pinGroupShiftLeft(pinGroup * pg, uint32 bits) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val <<= bits;
@@ -227,7 +230,7 @@ uint32 pinGroupShiftLeft(pinGroup * pg, uint32 bits) {
 
 uint32 pinGroupShiftRight(pinGroup * pg, uint32 bits) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val >>= bits;
@@ -238,9 +241,18 @@ uint32 pinGroupShiftRight(pinGroup * pg, uint32 bits) {
 
 uint32 pinGroupRotateLeft(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
+
+	//////////////////////////////////////////////////////////
+	//
+	// If the pingroup's value is all 0s or all 1s there's no
+	// point rotating and this is probably an error
+	//
+	if (val == 0 || val == pg->set_mask) {
+		SYS_ERROR (ERR_PINGROUP_BAD_VAL);
+	}
 
 	uint8 carry = (val & pg->msb_mask) >> (pg->nBits -1);
 	val <<= 1;
@@ -252,9 +264,19 @@ uint32 pinGroupRotateLeft(pinGroup * pg) {
 
 uint32 pinGroupRotateRight(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
+
+	//////////////////////////////////////////////////////////
+	//
+	// If the pingroup's value is all 0s or all 1s there's no
+	// point rotating and this is probably an error
+	//
+	if (val == 0 || val == pg->set_mask) {
+		SYS_ERROR (ERR_PINGROUP_BAD_VAL);
+	}
+
 	uint8 carry = val & 1;
 	val >>= 1;
 
@@ -264,9 +286,9 @@ uint32 pinGroupRotateRight(pinGroup * pg) {
 }
 
 
-uint32 pinGroupInvert	(pinGroup * pg) {
+uint32 pinGroupInvert(pinGroup * pg) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val = ~val;
@@ -277,7 +299,7 @@ uint32 pinGroupInvert	(pinGroup * pg) {
 
 uint32 pinGroupOR(pinGroup * pg, uint32 or_val) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val |= or_val;
@@ -288,7 +310,7 @@ uint32 pinGroupOR(pinGroup * pg, uint32 or_val) {
 
 uint32 pinGroupAND(pinGroup * pg, uint32 and_val) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val |= and_val;
@@ -299,7 +321,7 @@ uint32 pinGroupAND(pinGroup * pg, uint32 and_val) {
 
 uint32 pinGroupXOR(pinGroup * pg, uint32 xor_val) {
 
-	VERIFY_STRUCTURE (pg);
+	VERIFY_OBJECT (pg, OBJID_PINGROUP)
 
 	uint32 val = pg->val;
 	val ^= xor_val;

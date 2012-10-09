@@ -1,4 +1,4 @@
-///////////////////////////// events.c //////////////////////////////////
+/////////////////////////////// events.c //////////////////////////////////
 //
 //  
 //
@@ -11,24 +11,26 @@ voidFuncPtr eventFunctions[EVENT_DUMMY] = {0};
 
 const uint32 N_EVENTS = (sizeof(eventFunctions) / sizeof(eventFunctions[0]));
 
-void attachEventHandler (uint32 event, void (*userFunc)(void)) {
+uint32 attachEventHandler (uint32 event, void (*userFunc)(void)) {
 
 	if (event >= N_EVENTS) {
 		SYS_ERROR(ERR_INV_INTERRUPT);
-		return;
+		return ERROR;
 	}
 
 	eventFunctions[event] = userFunc;
+	return NOERROR;
 }
 
-void detachEventHandler(uint32 event) {
+uint32 detachEventHandler(uint32 event) {
 
 	if (event >= N_EVENTS) {
 		SYS_ERROR(ERR_INV_INTERRUPT);
-		return;
+		return ERROR;
 	}
 
-	eventFunctions[event] = 0;
+	eventFunctions[event] = NULL;
+	return NOERROR;
 
 }
 

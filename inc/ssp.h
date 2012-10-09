@@ -89,5 +89,6 @@ uint32 sspLoopbackOn	(sspConnection * s);
 uint32 sspLoopbackOff	(sspConnection * s);
 uint32 sspMisoDisable	(sspConnection * s);
 uint32 sspMisoEnable	(sspConnection * s);
+void 	sspFlush 		(sspConnection * s);
 
 #endif /* SSP_H_ */

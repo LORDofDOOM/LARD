@@ -90,8 +90,9 @@ sspConnection * sspCreate (uint8 data_bits, uint8 frame_format, uint8 mode, uint
 
 }
 
-uint32 sspFlush (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+void sspFlush (sspConnection * s) {
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
 
 	uint8 x;
 
@@ -107,7 +108,8 @@ uint32 sspFlush (sspConnection * s) {
 }
 
 uint32 sspWrite (sspConnection * s, uint16 * buf, uint8 nVals) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
 
 	for (; nVals; nVals--)
 		s->port->DR = *buf++;
@@ -116,7 +118,8 @@ uint32 sspWrite (sspConnection * s, uint16 * buf, uint8 nVals) {
 }
 
 uint32 sspExchange (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
 
 	s->port->CR1 |= (1 << SSP_CR1_SSE);
 
@@ -130,7 +133,8 @@ uint32 sspExchange (sspConnection * s) {
 }
 
 uint32 sspRead (sspConnection * s, uint16 * buf) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
 
 	////////////////////////////////////////////////////////////
 	// Read values until FIFO is empty
@@ -141,39 +145,58 @@ uint32 sspRead (sspConnection * s, uint16 * buf) {
 }
 
 uint32 sspEnable (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->enabled = TRUE;
 	s->port->CR1 |= (1 << SSP_CR1_SSE);
+
 	return NOERROR;
 }
 
 uint32 sspDisable (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->enabled = FALSE;
 	s->port->CR1 &= ~(1 << SSP_CR1_SSE);
+
 	return NOERROR;
 }
 
 uint32 sspLoopbackOn (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->port->CR1 |= (1 << SSP_CR1_LBM);
+
 	return NOERROR;
 }
 
 uint32 sspLoopbackOff (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->port->CR1 &= ~(1 << SSP_CR1_LBM);
+
 	return NOERROR;
 }
 
 uint32 sspMisoDisable (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->port->CR1 |= (1 << SSP_CR1_SOD);
+
 	return NOERROR;
 }
 
 uint32 sspMisoEnable (sspConnection * s) {
-	VERIFY_STRUCTURE(s);
+
+	VERIFY_OBJECT(s, OBJID_SSP_CONNECTION)
+
 	s->port->CR1 &= ~(1 << SSP_CR1_SOD);
+
 	return NOERROR;
 }

@@ -4,6 +4,8 @@
 //
 //
 
+// TODO: isFull, isEmpty, nItems
+
 #include "LARD.h"
 
 fifo8 * _fifoCreate (uint32 nItems, uint32 itemSize) {
@@ -14,8 +16,8 @@ fifo8 * _fifoCreate (uint32 nItems, uint32 itemSize) {
 	//
 	// Test for bad buffer size request
 	//
-	if (nItems > 256 || nItems == 0) {
-		SYS_ERROR (ERR_BUFFER_BAD_SIZE | nItems);
+	if ((nItems * itemSize)  > 1024 || nItems == 0) {
+		SYS_ERROR (ERR_BUFFER_BAD_SIZE | nItems * itemSize);
 		return 0;
 	}
 
@@ -25,9 +27,9 @@ fifo8 * _fifoCreate (uint32 nItems, uint32 itemSize) {
 	//
 	buffer = (void*)safeMalloc(sizeof (fifo8));
 
-	if (buffer == 0) {
+	if (buffer == NULL) {
 		SYS_ERROR (ERR_MALLOC_FAILED);
-		return 0;
+		return NULL;
 	}
 
 	/////////////////////////////////////////////////////////
@@ -36,16 +38,19 @@ fifo8 * _fifoCreate (uint32 nItems, uint32 itemSize) {
 	//
 	buffer->start = (void*)safeMalloc(nItems * itemSize);
 
-	if (buffer->start  == 0) {
+	if (buffer->start  == NULL) {
 		free (buffer);
 		SYS_ERROR (ERR_MALLOC_FAILED);
-		return 0;
+		return NULL;
 	}
 
 	/////////////////////////////////////////////////////////
 	//
 	// Load all variables with start values
 	//
+	buffer->object_id = OBJID_FIFO;
+	buffer->not_object_id = ~OBJID_FIFO;
+
 	buffer->rd_ptr	= buffer->start;
 	buffer->wr_ptr	= buffer->start;
 	buffer->end		= buffer->start + (nItems * itemSize);	// points to EOB + 1
@@ -63,17 +68,18 @@ fifo8 * _fifoCreate (uint32 nItems, uint32 itemSize) {
 //						items. Allocates RAM as appropriate.
 //
 // Parameters:			uint32 size: The number if data bytes required valid values 1-256
-//						uint32 itemSize, the size of each item in bytes, 1, 2 and 4 are valid.
 //
-// Returned value:		TRUE if no errors
-//						FALSE if there are errors
+// Returned value:		Pointer to the buffer if no errors
+//						NULL if there are errors
 //
-// Errors raised:		ERR_BUFFER_BAD_SIZE if the buffer size request is invalid
-//						ERR_BUFFER_MALLOC_FAILED if either malloc failed
+// Errors raised:		ERR_BUFFER_BAD_SIZE if the buffer size request is 0 or
+//							> 1024 bytes, 512 half-words, or 256 words. In other
+//							word the buffer can't be more than 1024 bytes in size.
+//						ERR_MALLOC_FAILED if safeMalloc calls failed
 //
-// Example:				fifo8 myBuffer;
+// Example:				fifo8 * myBuffer;
 //						myBuffer = fifo8Create(100);
-//						if (myBuffer == 0) myErrorFunc();
+//						if (myBuffer == NULL) myErrorFunc();
 //
 // Notes:				These functions call safeMalloc, therefore they can only be used
 //						when the system_initialising flag is TRUE, ie during the setup()
@@ -93,94 +99,127 @@ fifo32 * fifo32Create (uint32 nItems) {
 //
 // Function name:		fifo8/16/32Read
 //
-// Description:			Read a single item from a fifo.
+// Description:			Read a single item from a FIFO buffer.
 //
-// Parameters:			none
+// Parameters:			fifoX * buf, pointer to a FIFO buffer
+//						uint8 * result, pointer to a results value. If you
+//							are not interested in using the result variable
+//							use NULL for this parameter.
 //
-// Returned value:		uint32, 0-256 if byte available, -1 if not
+// Returned value:		Item from the buffer and result = 0 if item available,
+//						ERROR and result = RSLT_BUFFER_EMPTY if not
 //
 // Errors raised:		none
 //
-// Example:				uint32 val;
-//						val = fifo8Read ();
-//						if (val != -1)
-//							// val is a char from the buffer
+// Example:				val = fifo8Read(buf, NULL);
+//						if (val != ERROR)
+//							// val is an item from the buffer
 //
-// Notes:
+//						The above example is OK if the buffer does not hold a
+//						full range of binary values, say it only holds ASCII data
+//						or you know for a fact that the value -1 will never appear
+//						in the buffer.
 //
-uint8 fifo8Read (fifo8 * buf) {
+//						However special consideration has to be given when the
+//						value -1 (ERROR) is a valid item to be returned from the
+//						buffer. In this case you can't test the returned value
+//						and the supplied result variable must be used.
+//
+//						uint8 result;
+// 	 					val = fifo8Read(buf, &result);
+// 						if (result != RSLT_BUFFER_EMPTY)
+//							// val is an item from the buffer
+//
+//  Notes:
+//
+uint8 fifo8Read (fifo8 * buf, uint8 * result) {
 
 	uint32 val;
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
+	CLEAR_RESULT;
+
 	if (buf->nItems == 0) {
-		SYS_ERROR (ERR_BUFFER_EMPTY);
+		SET_RESULT(RSLT_BUFFER_EMPTY);
 		return ERROR;
 	}
 
 	val = * buf->rd_ptr;
 	buf->rd_ptr++;
-	buf->nItems--;
+	ATOMIC(buf->nItems--);
 
 	if (buf->rd_ptr == buf->end)
 		buf->rd_ptr = buf->start;
+//   _rx_buffer->tail = (unsigned int)(_rx_buffer->tail + 1) % SERIAL_BUFFER_SIZE;
 
 	return (val);
 }
 
-uint16 fifo16Read (fifo16 * buf) {
+uint16 fifo16Read (fifo16 * buf, uint8 * result) {
 
 	uint32 val;
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
+	CLEAR_RESULT;
+
 	if (buf->nItems == 0) {
-		SYS_ERROR (ERR_BUFFER_EMPTY);
+		SET_RESULT (RSLT_BUFFER_EMPTY);
 		return ERROR;
 	}
 
 	val = * buf->rd_ptr;
 	buf->rd_ptr++;
-	buf->nItems--;
+	ATOMIC(buf->nItems--);
 
 	if (buf->rd_ptr == buf->end)
 		buf->rd_ptr = buf->start;
+//   _rx_buffer->tail = (unsigned int)(_rx_buffer->tail + 1) % SERIAL_BUFFER_SIZE;
 
-	return (val);
+	return val;
 }
 
-uint32 fifo32Read (fifo32 * buf) {
+uint32 fifo32Read (fifo32 * buf, uint8 * result) {
 
 	uint32 val;
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
+	CLEAR_RESULT;
+
 	if (buf->nItems == 0) {
-		SYS_ERROR (ERR_BUFFER_EMPTY);
+		SET_RESULT (RSLT_BUFFER_EMPTY);
 		return ERROR;
 	}
 
 	val = * buf->rd_ptr;
 	buf->rd_ptr++;
-	buf->nItems--;
+	ATOMIC(buf->nItems--);
 
 	if (buf->rd_ptr == buf->end)
 		buf->rd_ptr = buf->start;
 
-	return (val);
+	return val;
 }
 
 ////////////////////////////////////////////////////////////////
 //
 // Function name:		fifo8/16/32Write
 //
-// Description:			Write a single item to a fifo.
+// Description:			Write a single item to a FIFO buffer.
 //
-// Parameters:			fifoN * buf, the buffer to write into
-//						uintN, the item to be written
+// Parameters:			fifoX * buf, the buffer to write into
+//						uintX, the item to be written
 //
-// Returned value:		TRUE if the write succeeded
-//						FALSE if not
+// Returned value:		NOERROR if the write succeeded
+//						ERROR if not
 //
-// Errors raised:		none
+// Errors raised:		ERR_BUFFER_FULL if the buffer is already full.
+//						ERR_BAD_OBJECT if buf is corrupted.
 //
 // Example:				uint8 val = 'A';
-//						if (fifo8Write(val) == FALSE)
+//						if (fifo8Write(val) == ERROR)
 //							// write failed
 //						else
 //							// write OK
@@ -189,6 +228,8 @@ uint32 fifo32Read (fifo32 * buf) {
 //
 uint32 fifo8Write (fifo8 * buf, uint8 val) {
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
 	if (buf->nItems >= buf->maxItems) {
 		SYS_ERROR (ERR_BUFFER_FULL);
 		return ERROR;
@@ -196,7 +237,7 @@ uint32 fifo8Write (fifo8 * buf, uint8 val) {
 
 	*buf->wr_ptr = val;
 	buf->wr_ptr++;
-	buf->nItems++;
+	ATOMIC(buf->nItems++);
 
 	if (buf->wr_ptr == buf->end)
 		buf->wr_ptr = buf->start;
@@ -206,6 +247,8 @@ uint32 fifo8Write (fifo8 * buf, uint8 val) {
 
 uint32 fifo16Write (fifo16 * buf, uint16 val) {
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
 	if (buf->nItems >= buf->maxItems) {
 		SYS_ERROR (ERR_BUFFER_FULL);
 		return ERROR;
@@ -213,7 +256,7 @@ uint32 fifo16Write (fifo16 * buf, uint16 val) {
 
 	*buf->wr_ptr = val;
 	buf->wr_ptr++;
-	buf->nItems++;
+	ATOMIC(buf->nItems++);
 
 	if (buf->wr_ptr == buf->end)
 		buf->wr_ptr = buf->start;
@@ -223,6 +266,8 @@ uint32 fifo16Write (fifo16 * buf, uint16 val) {
 
 uint32 fifo32Write (fifo32 * buf, uint32 val) {
 
+	VERIFY_OBJECT (buf, OBJID_FIFO)
+
 	if (buf->nItems >= buf->maxItems) {
 		SYS_ERROR (ERR_BUFFER_FULL);
 		return ERROR;
@@ -230,7 +275,7 @@ uint32 fifo32Write (fifo32 * buf, uint32 val) {
 
 	*buf->wr_ptr = val;
 	buf->wr_ptr++;
-	buf->nItems++;
+	ATOMIC(buf->nItems++);
 
 	if (buf->wr_ptr == buf->end)
 		buf->wr_ptr = buf->start;

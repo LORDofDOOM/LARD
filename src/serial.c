@@ -7,6 +7,46 @@
 
 #include "LARD.h"
 
+#if 0
+void uartinit(uint32_t brate)
+{
+    uint32_t regVal, Fdiv;
+
+    NVIC_DisableIRQ(UART0_IRQn);
+
+    //Enable Pins 0_1 and 0_2 for UART0
+    LPC_IOCON->PIO0_1 &= ~0x07;    /* UART0 I/O config */
+    LPC_IOCON->PIO0_1 |= 0x02;     /* UART0 RXD LOC0 */
+    LPC_IOCON->PIO0_2 &= ~0x07;
+    LPC_IOCON->PIO0_2 |= 0x02;     /* UART0 TXD LOC0 */
+
+    /* Enable UART 0 clock */
+    LPC_SYSCON->PRESETCTRL |= (0x1<<2);
+    LPC_SYSCON->SYSAHBCLKCTRL |= (0x1<<12);
+    LPC_SYSCON->UART0CLKDIV = 0x1;     /* divided by 1 */
+
+    LPC_UART0->LCR = 0x83;             /* 8 bits, no Parity, 1 Stop bit */
+    regVal = LPC_SYSCON->UART0CLKDIV;
+    Fdiv = ((SystemCoreClock/regVal)/16)/brate ;    /*baud rate */
+
+    LPC_UART0->DLM = Fdiv / 256;
+    LPC_UART0->DLL = Fdiv % 256;
+    LPC_UART0->LCR = 0x03;        /* DLAB = 0 */
+    LPC_UART0->FDR = 0x10;        /* set to default value: 0x10 */
+    LPC_UART0->FCR = 0x07;        /* Enable and reset TX and RX FIFO. */
+
+    /* Read to clear the line status. */
+    regVal = LPC_UART0->LSR;
+
+    /* Ensure a clean start, no data in either TX or RX FIFO. */
+    while ( (LPC_UART0->LSR & (LSR_THRE|LSR_TEMT)) != (LSR_THRE|LSR_TEMT) );
+
+    NVIC_EnableIRQ(UART0_IRQn); //Re-enable interrupt after changes
+
+    //LPC_UART0->IER = IER_RBR | IER_THRE | IER_RLS;    /* Enable UART interrupt */
+}
+#endif
+
 /////////////////////////////////////////////////////////////////
 // Array of pointers to all created serial structures
 //
@@ -14,6 +54,47 @@
 // may be used for software serial
 //
 serialConnection * serialConnections [10];
+
+/////////////////////////////////////////////////////////////////
+//
+// Array of logical pin numbers usable by the two UARTs
+//
+// UART0 can use 1/2 or 40/41 for RxD/Txd
+// UART1 can use 8/9, 50/49 or 51/52 for RxD/Txd
+//
+uint8 __uart_logical_pins[2][6] = {
+/*   				Rxd		Txd		Rxd		Txd		Rxd		Txd */
+/* UART0 */		   {1,		2,		40,		41,		ERROR,	ERROR},
+/* UART1 */		   {8,		9,		50, 	49,		51,		52}
+};
+
+uint32 serialSetUartPins(serialConnection * s, uint32 location) {
+
+	uint8 txPin;
+	uint8 rxPin;
+
+	VERIFY_OBJECT (s, ERR_BAD_OBJECT);
+
+	ASSERT_RETERR (location > 3, ERR_SERIAL_BAD_PORT);
+
+	location <<= 1;
+	rxPin = __uart_logical_pins[s->port][location];
+	txPin = __uart_logical_pins[s->port][location+1];
+
+
+	ASSERT_RETERR ((rxPin == ERROR) || (txPin == ERROR), ERR_SERIAL_BAD_LOCATION);
+
+	TRY
+		pinFunc (rxPin, (s->port == 0) ? FUNC_RXD0 : FUNC_RXD1);
+		pinFunc (txPin, (s->port == 0) ? FUNC_TXD0 : FUNC_TXD1);
+	CATCH_RETERR
+
+	s->txPin = txPin;
+	s->rxPin = rxPin;
+
+	return NOERROR;
+}
+
 
 serialConnection * serialCreate (uint8 port, uint32 baudrate, uint8 data_bits, uint8 parity, uint8 stop_bits,
 		uint8 rx_buff_size, uint8 tx_buff_size) {
@@ -42,18 +123,16 @@ serialConnection * serialCreate (uint8 port, uint32 baudrate, uint8 data_bits, u
 	s->object_id 	 = OBJID_SERIAL_CONNECTION;
 	s->not_object_id = ~OBJID_SERIAL_CONNECTION;
 
+	s->port = port;
+
 	/////////////////////////////////////////////////////////////////
 	//
 	switch (port) {
 		case SERIAL_UART0:
 
 			/////////////////////////////////////////////////////////////////
-			// Setup Rx and Tx pins
-			pinFunc (1, FUNC_RXD0);
-			pinFunc (2, FUNC_TXD0);
-
-			s->rxPin = 1;
-			s->txPin = 2;
+			// Setup default Rx and Tx pins
+			serialSetUartPins (s, UART0_PINS_R1_T2);
 
 			/////////////////////////////////////////////////////////////////
 			// Disable this UART's interrupt for the duration
@@ -105,11 +184,7 @@ serialConnection * serialCreate (uint8 port, uint32 baudrate, uint8 data_bits, u
 		case SERIAL_UART1:
 			// NOTE: Comments as per the above UART0 code
 
-			pinFunc (8, FUNC_RXD1);
-			pinFunc (9, FUNC_TXD1);
-
-			s->rxPin = 8;
-			s->txPin = 9;
+			serialSetUartPins (s, UART1_PINS_R8_T9);
 
 			NVIC_DisableIRQ(UART1_IRQn);
 			uart = (LPC_UART0_Type*) LPC_UART1;

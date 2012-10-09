@@ -11,7 +11,55 @@ uint32 sysErrors [10];
 uint32 *sysErrorPtr = sysErrors;
 uint32 nSysErrors = 0;
 
+const uint32 MAX_SYS_ERRORS = (sizeof(sysErrors) / sizeof(sysErrors[0]));
+
 jmp_buf syserr_env;
+
+void  __assert_handler(uint32 err, char * x) {
+
+	if (eventFunctions[EVENT_SYS_ERROR] != NULL) {
+		(eventFunctions[EVENT_SYS_ERROR]) ();
+	} else {
+		printf ("!%04x.%04x:%s\n",err >> 16, err & 0xFFFF, x);
+	}
+
+	sysErrRaise (err);
+}
+
+
+////////////////////////////////////////////////////////////////
+//
+// Function name:		sysErrRaise
+//
+// Description:
+//
+// Parameters:
+//
+// Returned value:
+//
+// Errors raised:
+//
+// Example:
+//
+// Notes:
+//
+void sysErrRaise (uint32 err) {
+
+	if (nSysErrors >= MAX_SYS_ERRORS) {
+//		longjmp(syserr_env, err);
+//		FATAL (ERR_TOO_MANY);
+		while(1)
+			sysErrDump();
+	}
+
+	*sysErrorPtr++ = err;
+	nSysErrors++;
+	__last_syserr = err;
+
+	sysErrorHandler();
+
+}
+
 
 void	sysErrorHandler (void) {
 
@@ -20,8 +68,6 @@ void	sysErrorHandler (void) {
 	}
 
 }
-
-const uint32 MAX_SYS_ERRORS = (sizeof(sysErrors) / sizeof(sysErrors[0]));
 
 ////////////////////////////////////////////////////////////////
 //
@@ -113,38 +159,6 @@ uint32 sysErrRead () {
 	return (*(sysErrorPtr));
 }
 
-////////////////////////////////////////////////////////////////
-//
-// Function name:		sysErrRaise
-//
-// Description:
-//
-// Parameters:
-//
-// Returned value:
-//
-// Errors raised:
-//
-// Example:
-//
-// Notes:
-//
-void sysErrRaise (uint32 err) {
-
-	if (nSysErrors >= MAX_SYS_ERRORS) {
-//		longjmp(syserr_env, err);
-//		FATAL (ERR_TOO_MANY);
-		while(1)
-			sysErrDump();
-	}
-
-	*sysErrorPtr++ = err;
-	nSysErrors++;
-	__last_syserr = err;
-
-	sysErrorHandler();
-
-}
 
 ////////////////////////////////////////////////////////////////
 //
@@ -161,6 +175,7 @@ void sysErrRaise (uint32 err) {
 // Example:
 //
 // Notes:
+//
 //
 void sysErrDump () {
 

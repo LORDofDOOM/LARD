@@ -9,7 +9,7 @@
 
 ////////////////////////////////////////////////////////////////
 //
-// Function name:		swTimerScan
+// Function name:		debugPrintVar
 //
 // Description:
 //
@@ -22,6 +22,11 @@
 // Example:
 //
 // Notes:
+//
+// TODO:				Should not use any system functions to
+//						dump the data. Move a copy of the shiftOut()
+//						code into here and hard code so as not to
+//						use any pinXxx() functions.
 //
 void debugPrintVar (uint32 var) {
 

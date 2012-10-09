@@ -70,7 +70,7 @@ void 	pinMode					(uint8_t pin, uint8_t mode);
 uint16	analogRead				(uint8);
 uint32	millis					(void);
 void 	delay					(uint32 ms);
-void 	delayMillseconds		(uint32 delay);
+void 	delayMilliseconds		(uint32 delay);
 void 	attachInterrupt			(uint8_t pin, void (*func)(void), int mode);
 void 	detachInterrupt			(uint8_t);
 

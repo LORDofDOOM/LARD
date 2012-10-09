@@ -20,6 +20,16 @@
 #include <core_cm0.h>
 
 
+#define LPC1227_64PIN
+//#define LPC1227_48PIN
+
+#ifdef 	LPC1227_64PIN
+#define		NATIVE_PINS	55
+#endif
+#ifdef 	LPC1227_48PIN
+#define		NATIVE_PINS	39
+#endif
+
 #define 	TRUE	1
 #define 	FALSE	0
 #define 	ERROR	-1
@@ -27,6 +37,8 @@
 
 #define 	HIGH	1
 #define 	LOW		0
+
+#define		NULLCHAR '\0'
 
 #define		msTicks		__msTicks
 
@@ -36,6 +48,7 @@ typedef		uint8_t 	uint8;
 typedef		uint16_t 	uint16;
 typedef		uint32_t	uint32;
 typedef		int32_t		int32;
+typedef		int8_t		int8;
 
 #define     __I     volatile const       /*!< defines 'read only' permissions                 */
 #define     __O     volatile             /*!< defines 'write only' permissions                */
@@ -43,7 +56,6 @@ typedef		int32_t		int32;
 
 #define F_CPU 35000000UL
 
-#define 	MAX_PINS 	39
 
 #define byte0(w) ((uint8_t) ((w) & 0xff))
 #define byte1(w) ((uint8_t) ((w) >> 8) & 0xFF)
@@ -56,15 +68,14 @@ typedef void (*voidFuncPtr)(void);
 
 #define	CR_INTEGER_PRINTF	1		// No floating point in Redlib printf()
 
+//#include "LARD.h"
 
-#include "LARD.h"
 #include "interrupts.h"
 #include "uart.h"
 #include "ssp.h"
 #include "pin.h"
 #include "pingroup.h"
 #include "debug.h"
-#include "error.h"
 #include "arduino.h"
 #include "shift.h"
 #include "fifo.h"
@@ -78,6 +89,11 @@ typedef void (*voidFuncPtr)(void);
 #include "debounce.h"
 #include "fsm.h"
 #include "resources.h"
+#include "lstring.h"
+#include "character.h"
+#include "vpin.h"
+#include "error.h"
+#include "app.h"
 
 enum {
 	PINS_ON_PORT0	= 32,
@@ -86,11 +102,13 @@ enum {
 };
 
 enum {
-	OBJID_SSP_CONNECTION,
+	OBJID_SSP_CONNECTION = 1,
 	OBJID_SERIAL_CONNECTION,
 	OBJID_HWTIMER,
 	OBJID_SWTIMER,
-	OBJID_PINGROUP
+	OBJID_PINGROUP,
+	OBJID_STRING,
+	OBJID_FIFO
 };
 
 
