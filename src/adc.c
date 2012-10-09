@@ -7,7 +7,6 @@
 //
 // TODO: Modify to always use the interrupt-driven option.
 //
-//
 #include "LARD.h"
 
 volatile uint32_t ADCValue[ADC_NUM];
